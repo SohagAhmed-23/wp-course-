@@ -26,6 +26,76 @@ $units_raw  = (array) json_decode( get_post_meta( $cid, '_cb_course_content', tr
 $units      = array_values( array_filter( $units_raw, fn( $u ) => ! empty( $u['title'] ) ) );
 $support    = array_values( array_filter( (array) json_decode( get_post_meta( $cid, '_cb_additional_support', true ) ?: '[]', true ), 'trim' ) );
 
+/* Course active status */
+$course_active = get_post_meta( $cid, '_cb_course_active', true );
+// Default to active if the meta has never been set (backward compatibility)
+if ( '' === $course_active ) {
+	$course_active = '1';
+}
+$course_active = (bool) $course_active;
+
+/* Unique Features — dynamic with default fallback */
+$_raw_features     = get_post_meta( $cid, '_cb_unique_features', true );
+$_decoded_features = $_raw_features ? json_decode( $_raw_features, true ) : null;
+$_has_custom_features = is_array( $_decoded_features ) && count( $_decoded_features ) > 0;
+
+/**
+ * Normalize garbled icon strings caused by wp_magic_quotes stripping \u backslashes.
+ * e.g. "ud83euddE0" → "🧠"
+ */
+$_icon_fix_map = [
+	'ud83euddE0' => '🧠', 'ud83euddE1' => '🧡',
+	'ud83cudfb5' => '🎵',
+	'ud83cudfc6' => '🏆',
+	'ud83ddcf1'  => '📱', 'ud83ddCf1'  => '📱',
+	'ud83cudf0d' => '🌍',
+	'ud83ddcca'  => '📊', 'ud83ddCca'  => '📊',
+	// also cover uppercase variants
+	'ud83eudde0' => '🧠',
+];
+
+if ( $_has_custom_features ) {
+	$unique_features = array_map( function( $f ) use ( $_icon_fix_map ) {
+		$raw = strtolower( trim( $f['icon'] ?? '' ) );
+		if ( isset( $_icon_fix_map[ $raw ] ) ) {
+			$f['icon'] = $_icon_fix_map[ $raw ];
+		} elseif ( isset( $_icon_fix_map[ $f['icon'] ?? '' ] ) ) {
+			$f['icon'] = $_icon_fix_map[ $f['icon'] ];
+		}
+		return $f;
+	}, $_decoded_features );
+} else {
+	// Default fallback features
+	$unique_features = [
+		[ 'icon' => '🧠', 'title' => 'Neuro-Friendly Design',   'description' => 'Multi-sensory tasks for all learning styles' ],
+		[ 'icon' => '🎵', 'title' => 'Music-Led Learning',       'description' => 'Jolly Songs make phonics memorable and fun' ],
+		[ 'icon' => '🏆', 'title' => 'Achievement Badges',       'description' => 'Digital rewards after every completed unit' ],
+		[ 'icon' => '📱', 'title' => 'Mobile-Friendly Sessions', 'description' => 'Learn on any device, anywhere' ],
+		[ 'icon' => '🌍', 'title' => 'Native-Level Instructors', 'description' => 'Qualified TEFL-certified teachers' ],
+		[ 'icon' => '📊', 'title' => 'Data-Driven Progress',     'description' => "Real-time analytics for each child's growth" ],
+	];
+}
+
+/* Batch Schedule — dynamic */
+$_raw_schedules   = get_post_meta( $cid, '_cb_batch_schedules', true );
+$_decoded_schedules = $_raw_schedules ? json_decode( $_raw_schedules, true ) : null;
+$batch_schedules  = is_array( $_decoded_schedules ) ? $_decoded_schedules : [];
+
+/* Batch Schedule — split into fixed Morning / Evening arrays */
+$_morning_times = [];
+$_evening_times = [];
+foreach ( $batch_schedules as $s ) {
+	$_grp  = strtolower( sanitize_text_field( $s['group'] ?? '' ) );
+	$_time = sanitize_text_field( $s['time'] ?? '' );
+	if ( ! $_time ) continue;
+	if ( strpos( $_grp, 'morning' ) !== false ) {
+		$_morning_times[] = $_time;
+	} else {
+		$_evening_times[] = $_time;
+	}
+}
+$_has_schedule = ! empty( $_morning_times ) || ! empty( $_evening_times );
+
 /* Dept / taxonomy */
 $terms     = wp_get_post_terms( $cid, 'cb_category' );
 $dept_id   = ( ! empty( $terms ) && ! is_wp_error( $terms ) ) ? (int) $terms[0]->term_id : 0;
@@ -189,27 +259,22 @@ get_header();
 		<?php endif; ?>
 
 		<!-- Unique Features -->
+		<?php if ( ! empty( $unique_features ) ) : ?>
 		<div class="cbo__card">
 			<div class="cbo__card-header">
 				<div class="cbo__card-icon">✨</div>
 				<h2>Unique Features</h2>
 			</div>
 			<div class="cbo__features-grid">
-				<?php foreach ( [
-					[ '🧠', 'Neuro-Friendly Design',   'Multi-sensory tasks for all learning styles' ],
-					[ '🎵', 'Music-Led Learning',       'Jolly Songs make phonics memorable and fun' ],
-					[ '🏆', 'Achievement Badges',       'Digital rewards after every completed unit' ],
-					[ '📱', 'Mobile-Friendly Sessions', 'Learn on any device, anywhere' ],
-					[ '🌍', 'Native-Level Instructors', 'Qualified TEFL-certified teachers' ],
-					[ '📊', 'Data-Driven Progress',     "Real-time analytics for each child's growth" ],
-				] as $f ) : ?>
+				<?php foreach ( $unique_features as $f ) : ?>
 				<div class="cbo__feature-item">
-					<span class="cbo__feat-icon"><?php echo $f[0]; ?></span>
-					<div><strong><?php echo esc_html( $f[1] ); ?></strong><p><?php echo esc_html( $f[2] ); ?></p></div>
+					<span class="cbo__feat-icon"><?php echo esc_html( $f['icon'] ?? '' ); ?></span>
+					<div><strong><?php echo esc_html( $f['title'] ?? '' ); ?></strong><p><?php echo esc_html( $f['description'] ?? '' ); ?></p></div>
 				</div>
 				<?php endforeach; ?>
 			</div>
 		</div>
+		<?php endif; ?>
 
 		<!-- Course Instructors -->
 		<?php if ( ! empty( $dept_teachers ) ) : ?>
@@ -374,28 +439,35 @@ get_header();
 		<script>var CB_DemoCourseId=<?php echo (int) get_the_ID(); ?>;</script>
 
 		<!-- BATCH SCHEDULE -->
+		<?php if ( $_has_schedule ) : ?>
 		<div class="cbo__card">
 			<div class="cbo__card-header">
 				<div class="cbo__card-icon">🗓️</div>
 				<h3>Batch Schedule</h3>
 			</div>
 			<div class="cbo__schedule-grid">
+
+				<?php if ( ! empty( $_morning_times ) ) : ?>
 				<div>
 					<div class="cbo__schedule-heading cbo__schedule-heading--morning">☀️ Morning</div>
-					<div class="cbo__time-pill">8:00 AM – 8:30 AM</div>
-					<div class="cbo__time-pill">9:00 AM – 9:30 AM</div>
-					<div class="cbo__time-pill">10:00 AM – 10:30 AM</div>
-					<div class="cbo__time-pill">11:00 AM – 11:30 AM</div>
+					<?php foreach ( $_morning_times as $time ) : ?>
+					<div class="cbo__time-pill"><?php echo esc_html( $time ); ?></div>
+					<?php endforeach; ?>
 				</div>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $_evening_times ) ) : ?>
 				<div>
 					<div class="cbo__schedule-heading cbo__schedule-heading--evening">🌙 Evening</div>
-					<div class="cbo__time-pill">4:00 PM – 4:30 PM</div>
-					<div class="cbo__time-pill">5:00 PM – 5:30 PM</div>
-					<div class="cbo__time-pill">6:00 PM – 6:30 PM</div>
-					<div class="cbo__time-pill">7:00 PM – 7:30 PM</div>
+					<?php foreach ( $_evening_times as $time ) : ?>
+					<div class="cbo__time-pill"><?php echo esc_html( $time ); ?></div>
+					<?php endforeach; ?>
 				</div>
+				<?php endif; ?>
+
 			</div>
 		</div>
+		<?php endif; ?>
 
 		<!-- 24/7 SUPPORT -->
 		<div class="cbo__support-card">

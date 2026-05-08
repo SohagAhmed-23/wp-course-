@@ -146,6 +146,9 @@ class Ajax_Handler {
             'programme_overview'  => json_decode( get_post_meta( $post->ID, '_cb_programme_overview', true ) ?: '[]', true ),
             'course_content'      => json_decode( get_post_meta( $post->ID, '_cb_course_content', true ) ?: '[]', true ),
             'additional_support'  => json_decode( get_post_meta( $post->ID, '_cb_additional_support', true ) ?: '[]', true ),
+            'unique_features'     => json_decode( get_post_meta( $post->ID, '_cb_unique_features', true ) ?: '[]', true ),
+            'batch_schedules'     => json_decode( get_post_meta( $post->ID, '_cb_batch_schedules', true ) ?: '[]', true ),
+            'course_active'       => get_post_meta( $post->ID, '_cb_course_active', true ) !== '0' ? '1' : '0',
             'age_min'             => get_post_meta( $post->ID, '_cb_age_min', true ),
             'video_url'           => get_post_meta( $post->ID, '_cb_video_url', true ),
             'youtube_url'         => get_post_meta( $post->ID, '_cb_youtube_url', true ),
@@ -176,6 +179,9 @@ class Ajax_Handler {
             'programme_overview'  => $this->sanitize_array( $_POST['programme_overview'] ?? [] ),
             'course_content'      => $this->sanitize_nested( $_POST['course_content'] ?? [] ),
             'additional_support'  => $this->sanitize_array( $_POST['additional_support'] ?? [] ),
+            'unique_features'     => $this->sanitize_features( $_POST['unique_features'] ?? [] ),
+            'batch_schedules'     => $this->sanitize_schedules( $_POST['batch_schedules'] ?? [] ),
+            'course_active'       => isset( $_POST['course_active'] ) ? '1' : '0',
         ];
 
         if ( empty( $data['title'] ) ) {
@@ -528,6 +534,49 @@ class Ajax_Handler {
                 $result[] = array_map( 'sanitize_text_field', $item );
             } else {
                 $result[] = sanitize_text_field( $item );
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Sanitize unique features array — each item: icon, title, description.
+     */
+    private function sanitize_features( $arr ): array {
+        if ( ! is_array( $arr ) ) return [];
+        $result = [];
+        foreach ( $arr as $item ) {
+            if ( ! is_array( $item ) ) continue;
+            // wp_magic_quotes adds slashes to $_POST — unslash first so emoji \uXXXX stays intact
+            $icon  = sanitize_text_field( wp_unslash( $item['icon'] ?? '' ) );
+            $title = sanitize_text_field( wp_unslash( $item['title'] ?? '' ) );
+            $desc  = sanitize_text_field( wp_unslash( $item['description'] ?? '' ) );
+            if ( $title || $icon ) {
+                $result[] = [
+                    'icon'        => $icon,
+                    'title'       => $title,
+                    'description' => $desc,
+                ];
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Sanitize batch schedules array — each item: group, time.
+     */
+    private function sanitize_schedules( $arr ): array {
+        if ( ! is_array( $arr ) ) return [];
+        $result = [];
+        foreach ( $arr as $item ) {
+            if ( ! is_array( $item ) ) continue;
+            $group = sanitize_text_field( $item['group'] ?? '' );
+            $time  = sanitize_text_field( $item['time'] ?? '' );
+            if ( $group || $time ) {
+                $result[] = [
+                    'group' => $group,
+                    'time'  => $time,
+                ];
             }
         }
         return $result;

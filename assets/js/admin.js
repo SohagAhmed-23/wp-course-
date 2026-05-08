@@ -117,7 +117,7 @@
                             <div>
                                 <label class="cb-label" style="margin-bottom:4px;font-size:11px">Unit Title</label>
                                 <input type="text" name="course_content[${idx}][title]"
-                                    value="${escHtml(title)}" placeholder="e.g. Listening & Speaking" class="cb-input cb-input--sm">
+                                    value="${escHtml(title)}" placeholder="e.g. Listening &amp; Speaking" class="cb-input cb-input--sm">
                             </div>
                         </div>
                         <div style="margin-top:8px">
@@ -134,6 +134,108 @@
                 </div>
             `);
             $list.append($item);
+        },
+
+        /**
+         * Add a Unique Feature row — emoji dropdown + editable title + description.
+         */
+        addFeature($list, data = {}) {
+            const idx   = $list.children().length;
+            const icon  = data.icon  || '🧠';
+            const title = data.title || '';
+            const desc  = data.description || '';
+
+            // Preset map: emoji → { title, description }
+            const CB_FEAT_PRESETS = {
+                '🧠': { title: 'Neuro-Friendly Design',   description: 'Multi-sensory tasks for all learning styles' },
+                '🎵': { title: 'Music-Led Learning',       description: 'Jolly Songs make phonics memorable and fun' },
+                '🏆': { title: 'Achievement Badges',       description: 'Digital rewards after every completed unit' },
+                '📱': { title: 'Mobile-Friendly Sessions', description: 'Learn on any device, anywhere' },
+                '🌍': { title: 'Native-Level Instructors', description: 'Qualified TEFL-certified teachers' },
+                '📊': { title: 'Data-Driven Progress',     description: "Real-time analytics for each child's growth" },
+            };
+
+            const ICONS = ['🧠','🎵','🏆','📱','🌍','📊'];
+            const optionsHtml = ICONS.map(e =>
+                `<option value="${e}" ${e === icon ? 'selected' : ''}>${e}</option>`
+            ).join('');
+
+            const preset  = CB_FEAT_PRESETS[icon] || {};
+            const defTitle = title || preset.title || '';
+            const defDesc  = desc  || preset.description || '';
+
+            const $item = $(`
+                <div class="cb-repeater-item">
+                    <div class="cb-drag-handle">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                            <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+                            <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                        </svg>
+                    </div>
+                    <div class="cb-repeater-item__content" style="flex:1">
+                        <div style="display:grid;grid-template-columns:110px 1fr 2fr;gap:8px;align-items:end">
+                            <div>
+                                <label class="cb-label" style="margin-bottom:4px;font-size:11px">Icon</label>
+                                <select name="unique_features[${idx}][icon]"
+                                    class="cb-feat-icon-select cb-input cb-input--sm"
+                                    style="font-size:20px;text-align:center;cursor:pointer;padding:4px 6px">
+                                    ${optionsHtml}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="cb-label" style="margin-bottom:4px;font-size:11px">Feature Title</label>
+                                <input type="text" name="unique_features[${idx}][title]"
+                                    value="${escHtml(defTitle)}" placeholder="e.g. Neuro-Friendly Design"
+                                    class="cb-feat-title cb-input cb-input--sm">
+                            </div>
+                            <div>
+                                <label class="cb-label" style="margin-bottom:4px;font-size:11px">Description</label>
+                                <input type="text" name="unique_features[${idx}][description]"
+                                    value="${escHtml(defDesc)}" placeholder="e.g. Multi-sensory tasks for all learners"
+                                    class="cb-feat-desc cb-input cb-input--sm">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="cb-repeater-item__remove" title="Remove Feature">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            `);
+            $list.append($item);
+        },
+
+        /**
+         * Add a Batch Schedule time-only row into a fixed Morning or Evening list.
+         * @param {jQuery} $list  - #cb-morning-list or #cb-evening-list
+         * @param {string} time   - Pre-filled time value
+         */
+        addTimeSlot($list, time = '') {
+            const $item = $(`
+                <div class="cb-repeater-item cb-schedule-item">
+                    <div class="cb-drag-handle">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                            <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+                            <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                        </svg>
+                    </div>
+                    <div class="cb-repeater-item__content" style="flex:1">
+                        <input type="text" class="cb-time-input cb-input cb-input--sm"
+                            value="${escHtml(time)}" placeholder="e.g. 8:00 AM – 8:30 AM"
+                            style="letter-spacing:.4px">
+                    </div>
+                    <button type="button" class="cb-repeater-item__remove" title="Remove Slot">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            `);
+            $list.append($item);
+            $item.find('.cb-time-input').focus();
         },
     };
 
@@ -410,6 +512,26 @@
                     $('#cb-featured-image-preview').show();
                     $('#cb-featured-image-remove').show();
                 }
+                // Video URL
+                if (d.video_url) $('#cb-video-url').val(d.video_url);
+
+                // Unique Features
+                (d.unique_features || []).forEach(f => Repeater.addFeature($('#cb-features-list'), f));
+
+                // Batch Schedules — split into fixed Morning / Evening lists
+                (d.batch_schedules || []).forEach(s => {
+                    const grp = (s.group || '').toLowerCase();
+                    if (grp.includes('morning')) {
+                        Repeater.addTimeSlot($('#cb-morning-list'), s.time);
+                    } else {
+                        Repeater.addTimeSlot($('#cb-evening-list'), s.time);
+                    }
+                });
+
+                // Course Active toggle
+                const isActive = d.course_active !== '0';
+                $('#cb-course-active').prop('checked', isActive);
+                updateActiveLabel(isActive);
             });
         } else {
             loadProducts();
@@ -430,6 +552,56 @@
         $('#cb-add-support').on('click', () =>
             Repeater.addSimple($('#cb-support-list'), 'additional_support[]', '', 'e.g. Access to course community')
         );
+        $('#cb-add-feature').on('click', () => Repeater.addFeature($('#cb-features-list')));
+
+        // Auto-fill title/description when admin picks a different emoji
+        const CB_FEAT_PRESETS = {
+            '🧠': { title: 'Neuro-Friendly Design',   description: 'Multi-sensory tasks for all learning styles' },
+            '🎵': { title: 'Music-Led Learning',       description: 'Jolly Songs make phonics memorable and fun' },
+            '🏆': { title: 'Achievement Badges',       description: 'Digital rewards after every completed unit' },
+            '📱': { title: 'Mobile-Friendly Sessions', description: 'Learn on any device, anywhere' },
+            '🌍': { title: 'Native-Level Instructors', description: 'Qualified TEFL-certified teachers' },
+            '📊': { title: 'Data-Driven Progress',     description: "Real-time analytics for each child's growth" },
+        };
+        const allPresetTitles = Object.values(CB_FEAT_PRESETS).map(p => p.title);
+        const allPresetDescs  = Object.values(CB_FEAT_PRESETS).map(p => p.description);
+
+        $(document).on('change', '.cb-feat-icon-select', function () {
+            const $row   = $(this).closest('.cb-repeater-item');
+            const $title = $row.find('.cb-feat-title');
+            const $desc  = $row.find('.cb-feat-desc');
+            const preset = CB_FEAT_PRESETS[$(this).val()];
+            if (!preset) return;
+            // Only overwrite if the field is empty or still a known default
+            if (!$title.val() || allPresetTitles.includes($title.val())) {
+                $title.val(preset.title);
+            }
+            if (!$desc.val() || allPresetDescs.includes($desc.val())) {
+                $desc.val(preset.description);
+            }
+        });
+
+        // Two fixed schedule sections: Morning and Evening
+        $('#cb-add-morning').on('click', () => Repeater.addTimeSlot($('#cb-morning-list')));
+        $('#cb-add-evening').on('click', () => Repeater.addTimeSlot($('#cb-evening-list')));
+
+        // Course Active toggle — visual feedback
+        function updateActiveLabel(isActive) {
+            const $label = $('#cb-active-label');
+            const $text  = $('#cb-active-label-text');
+            if (isActive) {
+                $label.css({ 'background': '#f0fdf4', 'border-color': '#bbf7d0' });
+                $text.css('color', '#15803d').text('✅ Course is Active');
+            } else {
+                $label.css({ 'background': '#fff5f5', 'border-color': '#fecaca' });
+                $text.css('color', '#991b1b').text('⛔ Course is Inactive / Deactivated');
+            }
+        }
+        $('#cb-course-active').on('change', function () {
+            updateActiveLabel($(this).is(':checked'));
+        });
+        // Initialise label state (defaults to checked for new courses)
+        updateActiveLabel($('#cb-course-active').is(':checked'));
 
         // Collect unit data properly
         function collectUnits() {
@@ -478,7 +650,29 @@
                 duration_months:     $('#cb-duration').val(),
                 live_classes:        $('#cb-live-classes').val(),
                 featured_image_id:   parseInt($('#cb-featured-image-id').val()) || 0,
+                course_active:       $('#cb-course-active').is(':checked') ? '1' : '0',
             };
+
+            // Collect features
+            const features = [];
+            $('#cb-features-list .cb-repeater-item').each(function () {
+                features.push({
+                    icon:        $(this).find('[name*="[icon]"]').val(),
+                    title:       $(this).find('[name*="[title]"]').val(),
+                    description: $(this).find('[name*="[description]"]').val(),
+                });
+            });
+
+            // Collect schedules from fixed Morning / Evening lists
+            const schedules = [];
+            $('#cb-morning-list .cb-schedule-item').each(function () {
+                const time = $(this).find('.cb-time-input').val().trim();
+                if (time) schedules.push({ group: '☀️ Morning', time });
+            });
+            $('#cb-evening-list .cb-schedule-item').each(function () {
+                const time = $(this).find('.cb-time-input').val().trim();
+                if (time) schedules.push({ group: '🌙 Evening', time });
+            });
 
             // Append as array data
             const overview = [];
@@ -491,7 +685,9 @@
                 + '&' + $.param({ learning_objectives: objectives })
                 + '&' + $.param({ programme_overview: overview })
                 + '&' + $.param({ additional_support: support })
-                + '&' + $.param({ course_content: collectUnits() });
+                + '&' + $.param({ course_content: collectUnits() })
+                + '&' + $.param({ unique_features: features })
+                + '&' + $.param({ batch_schedules: schedules });
 
             $.post(ajax_url, 'action=cb_save_course&nonce=' + nonce + '&' + params)
               .done(res => {

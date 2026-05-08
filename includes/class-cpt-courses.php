@@ -120,8 +120,13 @@ class CPT_Courses {
             }
         }
 
+        // Course active/inactive flag
+        if ( isset( $data['course_active'] ) ) {
+            update_post_meta( $post_id, '_cb_course_active', $data['course_active'] === '1' ? '1' : '0' );
+        }
+
         // JSON-encoded repeater fields
-        $json_keys = [ 'learning_objectives', 'programme_overview', 'course_content', 'additional_support' ];
+        $json_keys = [ 'learning_objectives', 'programme_overview', 'course_content', 'additional_support', 'unique_features', 'batch_schedules' ];
         foreach ( $json_keys as $key ) {
             if ( isset( $data[ $key ] ) ) {
                 update_post_meta( $post_id, '_cb_' . $key, wp_json_encode( $data[ $key ] ) );

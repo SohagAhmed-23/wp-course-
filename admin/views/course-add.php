@@ -157,6 +157,73 @@ $all_categories = \CB\Core\Taxonomy_Category::get_all_formatted();
                     </div>
                 </div>
 
+                <!-- Unique Features -->
+                <div class="cb-card cb-card--accent-indigo">
+                    <div class="cb-card__header">
+                        <div class="cb-card__header-icon cb-icon-bg--indigo">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        </div>
+                        <div>
+                            <h2><?php _e( 'Unique Features', 'course-builder' ); ?></h2>
+                            <p><?php _e( 'Highlight what makes this course special. Leave empty to use defaults.', 'course-builder' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="cb-card__body">
+                        <div id="cb-features-list" class="cb-repeater cb-repeater--features"></div>
+                        <button type="button" class="cb-btn cb-btn--outline cb-btn--sm" id="cb-add-feature">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <?php _e( 'Add Feature', 'course-builder' ); ?>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Batch Schedule -->
+                <div class="cb-card cb-card--accent-teal">
+                    <div class="cb-card__header">
+                        <div class="cb-card__header-icon cb-icon-bg--teal">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        </div>
+                        <div>
+                            <h2><?php _e( 'Batch Schedule', 'course-builder' ); ?></h2>
+                            <p><?php _e( 'Add time slots grouped by session (e.g. Morning, Evening).', 'course-builder' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="cb-card__body">
+
+                        <!-- Morning Session -->
+                        <div style="margin-bottom:20px">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                                <span style="font-size:13px;font-weight:700;color:#b45309">
+                                    ☀️ <?php _e( 'Morning Session', 'course-builder' ); ?>
+                                </span>
+                                <button type="button" class="cb-btn cb-btn--outline cb-btn--sm" id="cb-add-morning">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    <?php _e( 'Add Slot', 'course-builder' ); ?>
+                                </button>
+                            </div>
+                            <div id="cb-morning-list" class="cb-repeater cb-repeater--schedules"></div>
+                        </div>
+
+                        <hr style="margin:0 0 20px;border:0;border-top:1px solid #e2e8f0">
+
+                        <!-- Evening Session -->
+                        <div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                                <span style="font-size:13px;font-weight:700;color:#6d28d9">
+                                    🌙 <?php _e( 'Evening Session', 'course-builder' ); ?>
+                                </span>
+                                <button type="button" class="cb-btn cb-btn--outline cb-btn--sm" id="cb-add-evening">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    <?php _e( 'Add Slot', 'course-builder' ); ?>
+                                </button>
+                            </div>
+                            <div id="cb-evening-list" class="cb-repeater cb-repeater--schedules"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+
             </div>
 
             <!-- RIGHT COLUMN — Sidebar -->
@@ -166,6 +233,21 @@ $all_categories = \CB\Core\Taxonomy_Category::get_all_formatted();
                 <div class="cb-card cb-card--publish">
                     <div class="cb-card__body">
                         <div id="cb-form-status" class="cb-form-status" style="display:none"></div>
+
+                        <!-- Course Active Toggle -->
+                        <div class="cb-field" style="margin-bottom:16px">
+                            <label class="cb-label" style="margin-bottom:8px"><?php _e( 'Course Status', 'course-builder' ); ?></label>
+                            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:8px" id="cb-active-label">
+                                <input type="checkbox" id="cb-course-active" name="course_active" value="1"
+                                    <?php checked( '1', '1' ); ?>
+                                    style="width:16px;height:16px;accent-color:#16a34a;flex-shrink:0">
+                                <div>
+                                    <strong id="cb-active-label-text" style="display:block;font-size:13px;color:#15803d">✅ Course is Active</strong>
+                                    <span style="font-size:12px;color:#4b7c5c">Uncheck to mark this course as Inactive/Deactivated.</span>
+                                </div>
+                            </label>
+                        </div>
+
                         <button type="submit" class="cb-btn cb-btn--primary cb-btn--full cb-btn--lg" id="cb-save-btn">
                             <span class="cb-btn__text">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
