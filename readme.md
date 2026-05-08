@@ -1,6 +1,6 @@
 # Course Builder Plugin — README
 
-**Plugin Version:** 1.4.7  
+**Plugin Version:** 1.6.0  
 **Requires WordPress:** 6.0+  
 **Requires PHP:** 8.0  
 **Author:** Course Builder Team
@@ -292,6 +292,11 @@ Make sure:
 ---
 
 ## 📝 Changelog
+
+### v1.6.0
+- Added Course Active/Inactive toggle in admin courses list
+- Implemented frontend visibility controls (inactive courses are hidden/redirected)
+- Improved AJAX sanitization for emoji icons
 
 ### v1.1.0
 - Initial public release
