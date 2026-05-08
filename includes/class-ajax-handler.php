@@ -16,6 +16,7 @@ class Ajax_Handler {
             'cb_delete_course',
             'cb_get_course',
             'cb_get_courses',
+            'cb_toggle_course_active',
             // Categories
             'cb_save_category',
             'cb_delete_category',
@@ -91,6 +92,22 @@ class Ajax_Handler {
 
     // ── Courses ───────────────────────────────────────────────────────────────
 
+    private function handle_toggle_course_active(): void {
+        $this->verify();
+        $id = absint( $_POST['id'] ?? 0 );
+        if ( ! $id ) {
+            wp_send_json_error( [ 'message' => 'Invalid course ID.' ] );
+        }
+        $current = get_post_meta( $id, '_cb_course_active', true );
+        if ( '' === $current ) $current = '1'; // default active
+        $new_value = ( $current === '1' ) ? '0' : '1';
+        update_post_meta( $id, '_cb_course_active', $new_value );
+        wp_send_json_success( [
+            'active'  => $new_value,
+            'message' => $new_value === '1' ? 'Course activated.' : 'Course deactivated.',
+        ] );
+    }
+
     private function handle_get_courses(): void {
         $this->verify();
         $page     = absint( $_POST['page'] ?? 1 );
@@ -106,16 +123,17 @@ class Ajax_Handler {
             $teacher    = $teacher_id ? get_post( $teacher_id ) : null;
             $terms      = wp_get_post_terms( $post->ID, 'cb_category' );
             $courses[]  = [
-                'id'          => $post->ID,
-                'title'       => $post->post_title,
-                'subtitle'    => get_post_meta( $post->ID, '_cb_subtitle', true ),
-                'category'    => ! empty( $terms ) ? $terms[0]->name : '—',
-                'teacher'     => $teacher ? $teacher->post_title : '—',
-                'date'        => get_the_date( 'M j, Y', $post ),
-            'age_min'     => get_post_meta( $post->ID, '_cb_age_min', true ),
-            'duration'    => get_post_meta( $post->ID, '_cb_duration_months', true ),
-            'live_classes'=> get_post_meta( $post->ID, '_cb_live_classes', true ),
-            'permalink'   => get_permalink( $post->ID ),
+                'id'           => $post->ID,
+                'title'        => $post->post_title,
+                'subtitle'     => get_post_meta( $post->ID, '_cb_subtitle', true ),
+                'category'     => ! empty( $terms ) ? $terms[0]->name : '—',
+                'teacher'      => $teacher ? $teacher->post_title : '—',
+                'date'         => get_the_date( 'M j, Y', $post ),
+            'age_min'      => get_post_meta( $post->ID, '_cb_age_min', true ),
+            'duration'     => get_post_meta( $post->ID, '_cb_duration_months', true ),
+            'live_classes' => get_post_meta( $post->ID, '_cb_live_classes', true ),
+            'permalink'    => get_permalink( $post->ID ),
+            'course_active'=> get_post_meta( $post->ID, '_cb_course_active', true ) !== '0' ? '1' : '0',
             ];
         }
 

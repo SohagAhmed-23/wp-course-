@@ -43,6 +43,11 @@ final class Plugin {
         // Frontend: template override + assets
         add_filter( 'single_template',       [ $this, 'load_course_template' ] );
         add_action( 'wp_enqueue_scripts',    [ $this, 'enqueue_frontend_assets' ] );
+
+        // Hide inactive courses from frontend lists (archives/categories)
+        if ( ! is_admin() ) {
+            add_action( 'pre_get_posts', [ $this, 'filter_inactive_courses' ] );
+        }
     }
 
     public function load_textdomain(): void {
@@ -104,5 +109,37 @@ final class Plugin {
             'ajax_url' => admin_url( 'admin-ajax.php' ),
             'nonce'    => wp_create_nonce( 'cb_demo_nonce' ),
         ] );
+    }
+
+    /**
+     * Filter out inactive courses from frontend main queries.
+     */
+    public function filter_inactive_courses( \WP_Query $query ): void {
+        // Only target frontend main queries for courses or categories.
+        if ( is_admin() || ! $query->is_main_query() ) return;
+
+        $is_course_query = $query->is_post_type_archive( 'cb_course' ) || 
+                           $query->is_tax( 'cb_category' ) || 
+                           ( $query->get( 'post_type' ) === 'cb_course' );
+
+        if ( $is_course_query ) {
+            $meta_query = $query->get( 'meta_query' ) ?: [];
+            
+            // Show if meta is '1' OR if meta doesn't exist (backward compatibility).
+            $meta_query[] = [
+                'relation' => 'OR',
+                [
+                    'key'     => '_cb_course_active',
+                    'value'   => '1',
+                    'compare' => '=',
+                ],
+                [
+                    'key'     => '_cb_course_active',
+                    'compare' => 'NOT EXISTS',
+                ],
+            ];
+            
+            $query->set( 'meta_query', $meta_query );
+        }
     }
 }

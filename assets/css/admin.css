@@ -605,6 +605,7 @@
 .cb-th--actions { width: 90px; text-align: right; }
 .cb-th--img     { width: 52px; }
 .cb-th--avatar  { width: 52px; }
+.cb-th--status  { width: 80px; text-align: center; }
 
 /* ── Pills ──────────────────────────────────────────────────────────────── */
 .cb-pill {
@@ -1199,3 +1200,59 @@
 /* Teacher name as link */
 .cb-teacher-name-link { text-decoration: none; }
 .cb-teacher-name-link:hover .cb-teacher-name { color: var(--cb-primary); text-decoration: underline; }
+/* ── Toggle Switch ───────────────────────────────────────────────────────── */
+.cb-toggle {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+.cb-toggle__input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.cb-toggle__slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--cb-gray-300);
+    transition: .3s;
+    border-radius: 20px;
+}
+
+.cb-toggle__slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s var(--cb-ease);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.cb-toggle__input:checked + .cb-toggle__slider {
+    background-color: var(--cb-primary);
+}
+
+.cb-toggle__input:checked + .cb-toggle__slider:before {
+    transform: translateX(18px);
+}
+
+.cb-toggle__input:focus + .cb-toggle__slider {
+    box-shadow: 0 0 1px var(--cb-primary);
+}
+
+.cb-toggle__input:disabled + .cb-toggle__slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

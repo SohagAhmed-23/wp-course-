@@ -34,6 +34,19 @@ if ( '' === $course_active ) {
 }
 $course_active = (bool) $course_active;
 
+if ( ! $course_active && ! current_user_can( 'manage_options' ) ) {
+	wp_safe_redirect( home_url() );
+	exit;
+}?>
+
+<?php if ( ! $course_active && current_user_can( 'manage_options' ) ) : ?>
+	<div style="background: #FEF2F2; color: #B91C1C; padding: 12px 20px; text-align: center; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; border-bottom: 1px solid #FECACA;">
+		⚠️ This course is currently <strong>Inactive</strong>. Public users cannot see this page and are redirected to home.
+	</div>
+<?php endif; ?>
+
+<?php
+
 /* Unique Features — dynamic with default fallback */
 $_raw_features     = get_post_meta( $cid, '_cb_unique_features', true );
 $_decoded_features = $_raw_features ? json_decode( $_raw_features, true ) : null;

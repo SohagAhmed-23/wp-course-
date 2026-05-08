@@ -79,6 +79,18 @@ class Shortcode_Category {
             'orderby'        => [ 'meta_value_num' => 'ASC', 'date' => 'DESC' ],
             'meta_key'       => '_cb_age_min',
             'tax_query'      => [ [ 'taxonomy' => 'cb_category', 'field' => 'term_id', 'terms' => $term->term_id ] ],
+            'meta_query'     => [
+                'relation' => 'OR',
+                [
+                    'key'     => '_cb_course_active',
+                    'value'   => '1',
+                    'compare' => '=',
+                ],
+                [
+                    'key'     => '_cb_course_active',
+                    'compare' => 'NOT EXISTS',
+                ],
+            ],
         ] );
 
         // Group courses by sub-department

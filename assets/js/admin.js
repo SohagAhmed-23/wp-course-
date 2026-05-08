@@ -269,9 +269,10 @@
         let deleteId    = null;
 
         function renderRow(c) {
-            const age      = c.age_min      ? c.age_min + '+'      : '—';
-            const duration = c.duration     ? c.duration + ' mo'   : '—';
-            const live     = c.live_classes ? c.live_classes        : '—';
+            const age      = c.age_min      ? c.age_min + '+'    : '—';
+            const duration = c.duration     ? c.duration + ' mo' : '—';
+            const live     = c.live_classes ? c.live_classes      : '—';
+            const isActive = c.course_active !== '0';
             return `
                 <tr data-id="${c.id}">
                     <td><input type="checkbox" class="cb-checkbox cb-row-check" value="${c.id}"></td>
@@ -287,6 +288,13 @@
                     <td class="cb-muted">${duration}</td>
                     <td class="cb-muted">${live}</td>
                     <td class="cb-muted">${escHtml(c.date)}</td>
+                    <td style="text-align:center">
+                        <label class="cb-toggle" title="${isActive ? 'Active — click to deactivate' : 'Inactive — click to activate'}">
+                            <input type="checkbox" class="cb-toggle__input cb-course-active-toggle"
+                                data-id="${c.id}" ${isActive ? 'checked' : ''}>
+                            <span class="cb-toggle__slider"></span>
+                        </label>
+                    </td>
                     <td>
                         <div class="cb-action-btns">
                             <a href="${c.permalink || '#'}" target="_blank" class="cb-action-btn cb-action-btn--preview" title="Preview">
@@ -341,7 +349,7 @@
 
         function loadCourses() {
             const $tbody = $('#cb-courses-tbody');
-            $tbody.html('<tr class="cb-loading-row"><td colspan="9"><div class="cb-spinner-wrap"><div class="cb-spinner"></div><span>Loading…</span></div></td></tr>');
+            $tbody.html('<tr class="cb-loading-row"><td colspan="10"><div class="cb-spinner-wrap"><div class="cb-spinner"></div><span>Loading…</span></div></td></tr>');
 
             ajax('cb_get_courses', {
                 page: currentPage, per_page: perPage,
@@ -349,14 +357,14 @@
             }).done(res => {
                 if (!res.success) {
                     const msg = res.data?.message || 'Failed to load courses.';
-                    $tbody.html('<tr><td colspan="9" class="cb-empty" style="color:#ef3e26">⚠ ' + msg + ' — <a href="javascript:location.reload()">Reload page</a></td></tr>');
+                    $tbody.html('<tr><td colspan="10" class="cb-empty" style="color:#ef3e26">⚠ ' + msg + ' — <a href="javascript:location.reload()">Reload page</a></td></tr>');
                     Toast.show(msg, 'error');
                     return;
                 }
                 const { courses, total, total_pages } = res.data;
 
                 if (courses.length === 0) {
-                    $tbody.html('<tr><td colspan="9" class="cb-empty">No courses found. <a href="admin.php?page=course-builder-add">Add your first course →</a></td></tr>');
+                    $tbody.html('<tr><td colspan="10" class="cb-empty">No courses found. <a href="admin.php?page=course-builder-add">Add your first course →</a></td></tr>');
                     renderPagination(0, 0);
                     return;
                 }
@@ -364,7 +372,7 @@
                 renderPagination(total, total_pages);
             }).fail(function(xhr) {
                 const errText = xhr.responseText ? xhr.responseText.substring(0, 200) : 'Unknown error';
-                $tbody.html('<tr><td colspan="9" class="cb-empty" style="color:#ef3e26">⚠ AJAX error — <a href="javascript:location.reload()">Reload the page</a> to try again.<br><small style="color:#94a3b8">' + errText + '</small></td></tr>');
+                $tbody.html('<tr><td colspan="10" class="cb-empty" style="color:#ef3e26">⚠ AJAX error — <a href="javascript:location.reload()">Reload the page</a> to try again.<br><small style="color:#94a3b8">' + errText + '</small></td></tr>');
             });
         }
 
@@ -394,6 +402,28 @@
         // Select all
         $(document).on('change', '#cb-check-all', function () {
             $('.cb-row-check').prop('checked', $(this).prop('checked'));
+        });
+
+        // Active/Inactive toggle
+        $(document).on('change', '.cb-course-active-toggle', function () {
+            const $chk = $(this);
+            const id   = $chk.data('id');
+            $chk.prop('disabled', true);
+            ajax('cb_toggle_course_active', { id }).done(res => {
+                $chk.prop('disabled', false);
+                if (res.success) {
+                    const active = res.data.active === '1';
+                    $chk.prop('checked', active);
+                    $chk.closest('label').attr('title', active ? 'Active — click to deactivate' : 'Inactive — click to activate');
+                    Toast.show(res.data.message, active ? 'success' : 'info');
+                } else {
+                    $chk.prop('checked', !$chk.prop('checked')); // revert on error
+                    Toast.show(res.data?.message || 'Toggle failed.', 'error');
+                }
+            }).fail(() => {
+                $chk.prop('disabled', false).prop('checked', !$chk.prop('checked'));
+                Toast.show('Toggle failed.', 'error');
+            });
         });
 
         // Delete

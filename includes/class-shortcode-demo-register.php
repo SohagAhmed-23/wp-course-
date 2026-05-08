@@ -51,6 +51,18 @@ class Shortcode_Demo_Register {
             'posts_per_page' => -1,
             'orderby'        => 'title',
             'order'          => 'ASC',
+            'meta_query'     => [
+                'relation' => 'OR',
+                [
+                    'key'     => '_cb_course_active',
+                    'value'   => '1',
+                    'compare' => '=',
+                ],
+                [
+                    'key'     => '_cb_course_active',
+                    'compare' => 'NOT EXISTS',
+                ],
+            ],
         ] );
 
         // Unique prefix so multiple shortcodes on one page don't conflict.

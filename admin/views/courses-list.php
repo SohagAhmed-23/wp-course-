@@ -130,12 +130,13 @@ $total_cats     = is_array( $categories ) ? count( $categories ) : 0;
                         <th><?php _e( 'Duration', 'course-builder' ); ?></th>
                         <th><?php _e( 'Live Classes', 'course-builder' ); ?></th>
                         <th><?php _e( 'Date', 'course-builder' ); ?></th>
+                        <th class="cb-th--status"><?php _e( 'Status', 'course-builder' ); ?></th>
                         <th class="cb-th--actions"><?php _e( 'Actions', 'course-builder' ); ?></th>
                     </tr>
                 </thead>
                 <tbody id="cb-courses-tbody">
                     <tr class="cb-loading-row">
-                        <td colspan="9">
+                        <td colspan="10">
                             <div class="cb-spinner-wrap">
                                 <div class="cb-spinner"></div>
                                 <span><?php _e( 'Loading courses…', 'course-builder' ); ?></span>
