@@ -1,0 +1,133 @@
+<?php
+/**
+ * Plugin Name:       Course Builder
+ * Plugin URI:        https://example.com/course-builder
+ * Description:       A modern, modular course management system for WordPress with full admin UI, AJAX-powered CRUD, WooCommerce integration, and a clean dashboard.
+ * Version:           1.5.0
+ * Author:            Course Builder Team
+ * Author URI:        https://example.com
+ * License:           GPL v2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       course-builder
+ * Domain Path:       /languages
+ * Requires at least: 6.0
+ * Requires PHP:      8.0
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+// ── Plugin constants ──────────────────────────────────────────────────────────
+define( 'CB_VERSION',     '1.5.0' );
+define( 'CB_PLUGIN_FILE', __FILE__ );
+define( 'CB_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
+define( 'CB_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
+define( 'CB_PLUGIN_BASE', plugin_basename( __FILE__ ) );
+
+// ── Autoloader ────────────────────────────────────────────────────────────────
+spl_autoload_register( function ( string $class ): void {
+    $prefix = 'CB\\';
+    if ( strpos( $class, $prefix ) !== 0 ) {
+        return;
+    }
+    $relative = str_replace( [ $prefix, '\\' ], [ '', '/' ], $class );
+    $map      = [
+        'Core/Plugin'            => CB_PLUGIN_DIR . 'includes/class-plugin.php',
+        'Core/CPT_Courses'       => CB_PLUGIN_DIR . 'includes/class-cpt-courses.php',
+        'Core/CPT_Teachers'      => CB_PLUGIN_DIR . 'includes/class-cpt-teachers.php',
+        'Core/Taxonomy_Category' => CB_PLUGIN_DIR . 'includes/class-taxonomy-category.php',
+        'Core/Ajax_Handler'      => CB_PLUGIN_DIR . 'includes/class-ajax-handler.php',
+        'Core/SMS'               => CB_PLUGIN_DIR . 'includes/class-sms.php',
+        'Admin/Admin'            => CB_PLUGIN_DIR . 'admin/class-admin.php',
+    ];
+    if ( isset( $map[ $relative ] ) ) {
+        require_once $map[ $relative ];
+    }
+} );
+
+// ── Activation / Deactivation ─────────────────────────────────────────────────
+register_activation_hook( __FILE__, 'cb_activate' );
+register_deactivation_hook( __FILE__, 'cb_deactivate' );
+
+function cb_activate(): void {
+    require_once CB_PLUGIN_DIR . 'includes/class-cpt-courses.php';
+    require_once CB_PLUGIN_DIR . 'includes/class-cpt-teachers.php';
+    require_once CB_PLUGIN_DIR . 'includes/class-taxonomy-category.php';
+    CB\Core\CPT_Courses::register();
+    CB\Core\CPT_Teachers::register();
+    CB\Core\Taxonomy_Category::register();
+    flush_rewrite_rules();
+    cb_install_tables();
+
+    // Store current version so upgrade checks can compare.
+    // Never delete user data here — activation fires on both fresh
+    // installs AND plugin updates/re-uploads.
+    update_option( 'cb_version',    CB_VERSION );
+    update_option( 'cb_db_version', '1.1' );
+}
+
+function cb_deactivate(): void {
+    flush_rewrite_rules();
+}
+
+function cb_install_tables(): void {
+    global $wpdb;
+    $charset = $wpdb->get_charset_collate();
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+    dbDelta( "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}cb_subcategories (
+        id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        category_id BIGINT UNSIGNED NOT NULL,
+        name        VARCHAR(255)    NOT NULL,
+        slug        VARCHAR(255)    NOT NULL,
+        sort_order  INT             NOT NULL DEFAULT 0,
+        created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY category_id (category_id)
+    ) $charset;" );
+
+    dbDelta( "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}cb_demo_registrations (
+        id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        course_id    BIGINT UNSIGNED NOT NULL DEFAULT 0,
+        student_name VARCHAR(255)    NOT NULL,
+        phone        VARCHAR(20)     NOT NULL,
+        registered_at DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY course_id (course_id),
+        KEY phone (phone)
+    ) $charset;" );
+
+    dbDelta( "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}cb_demo_otp (
+        id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        phone      VARCHAR(20)     NOT NULL,
+        otp_code   VARCHAR(10)     NOT NULL,
+        expires_at DATETIME        NOT NULL,
+        created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY phone (phone)
+    ) $charset;" );
+}
+
+// ── Runtime DB upgrade (runs once when db_version is outdated) ────────────────
+add_action( 'plugins_loaded', function (): void {
+    if ( get_option( 'cb_db_version', '0' ) !== '1.1' ) {
+        cb_install_tables();
+        update_option( 'cb_db_version', '1.1' );
+    }
+}, 5 );
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+add_action( 'plugins_loaded', function (): void {
+    require_once CB_PLUGIN_DIR . 'includes/class-plugin.php';
+    CB\Core\Plugin::instance()->init();
+
+    // After a reinstall or version change, flush rewrite rules once so
+    // CPT slugs (/course/xxx) resolve correctly without manual Permalinks save.
+    $stored = get_option( 'cb_version', '0' );
+    if ( version_compare( CB_VERSION, $stored, '>' ) ) {
+        update_option( 'cb_version', CB_VERSION );
+        add_action( 'init', function() {
+            flush_rewrite_rules( false );
+        }, 99 );
+    }
+} );

@@ -1,0 +1,11 @@
+{
+    "name": "course-builder/course-builder",
+    "description": "Course Builder WordPress plugin",
+    "type": "wordpress-plugin",
+    "require-dev": {
+        "php-stubs/wordpress-stubs": "^6.0"
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
