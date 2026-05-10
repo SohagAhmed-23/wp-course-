@@ -64,7 +64,8 @@ $_icon_fix_map = [
 	'ud83cudfc6' => '🏆', // Trophy
 	'ud83dudcf1' => '📱', // Mobile
 	'ud83cudf0d' => '🌍', // Globe
-	'ud83ddcca' => '📊', // Chart
+	'ud83ddcca' => '📊', // Chart - variant 1
+	'ud83dudcca' => '📊', // Chart - variant 2
 ];
 
 if ( $_has_custom_features ) {
