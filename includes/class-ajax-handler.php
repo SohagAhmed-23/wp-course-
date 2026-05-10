@@ -164,7 +164,7 @@ class Ajax_Handler {
             'programme_overview'  => json_decode( get_post_meta( $post->ID, '_cb_programme_overview', true ) ?: '[]', true ),
             'course_content'      => json_decode( get_post_meta( $post->ID, '_cb_course_content', true ) ?: '[]', true ),
             'additional_support'  => json_decode( get_post_meta( $post->ID, '_cb_additional_support', true ) ?: '[]', true ),
-            'unique_features'     => json_decode( get_post_meta( $post->ID, '_cb_unique_features', true ) ?: '[]', true ),
+            'unique_features'     => $this->fix_icon_garbling( json_decode( get_post_meta( $post->ID, '_cb_unique_features', true ) ?: '[]', true ) ),
             'batch_schedules'     => json_decode( get_post_meta( $post->ID, '_cb_batch_schedules', true ) ?: '[]', true ),
             'course_active'       => get_post_meta( $post->ID, '_cb_course_active', true ) !== '0' ? '1' : '0',
             'age_min'             => get_post_meta( $post->ID, '_cb_age_min', true ),
@@ -559,6 +559,8 @@ class Ajax_Handler {
 
     /**
      * Sanitize unique features array — each item: icon, title, description.
+     * Note: Don't use sanitize_text_field() on emojis - it corrupts UTF-8 characters.
+     * Icons come from a predefined dropdown so we just unslash them.
      */
     private function sanitize_features( $arr ): array {
         if ( ! is_array( $arr ) ) return [];
@@ -566,9 +568,9 @@ class Ajax_Handler {
         foreach ( $arr as $item ) {
             if ( ! is_array( $item ) ) continue;
             // wp_magic_quotes adds slashes to $_POST — unslash first so emoji \uXXXX stays intact
-            $icon  = sanitize_text_field( wp_unslash( $item['icon'] ?? '' ) );
-            $title = sanitize_text_field( wp_unslash( $item['title'] ?? '' ) );
-            $desc  = sanitize_text_field( wp_unslash( $item['description'] ?? '' ) );
+            $icon  = wp_unslash( $item['icon'] ?? '' );
+            $title = wp_strip_all_tags( wp_unslash( $item['title'] ?? '' ) );
+            $desc  = wp_strip_all_tags( wp_unslash( $item['description'] ?? '' ) );
             if ( $title || $icon ) {
                 $result[] = [
                     'icon'        => $icon,
@@ -598,5 +600,30 @@ class Ajax_Handler {
             }
         }
         return $result;
+    }
+
+    /**
+     * Fix garbled icon strings caused by wp_magic_quotes stripping \u backslashes.
+     * e.g. "ud83euddE0" → "🧠"
+     */
+    private function fix_icon_garbling( array $features ): array {
+        // Note: input is already lowercased in the loop below
+        $icon_map = [
+            'ud83eudde0' => '🧠', // Brain
+            'ud83eudde1' => '🧡', // Orange heart
+            'ud83cudfb5' => '🎵', // Music
+            'ud83cudfc6' => '🏆', // Trophy
+            'ud83dudcf1' => '📱', // Mobile
+            'ud83cudf0d' => '🌍', // Globe
+            'ud83ddcca' => '📊', // Chart
+        ];
+        foreach ( $features as &$f ) {
+            if ( ! isset( $f['icon'] ) ) continue;
+            $raw = strtolower( trim( $f['icon'] ) );
+            if ( isset( $icon_map[ $raw ] ) ) {
+                $f['icon'] = $icon_map[ $raw ];
+            }
+        }
+        return $features;
     }
 }

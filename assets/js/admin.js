@@ -148,7 +148,7 @@
             // Preset map: emoji → { title, description }
             const CB_FEAT_PRESETS = {
                 '🧠': { title: 'Neuro-Friendly Design',   description: 'Multi-sensory tasks for all learning styles' },
-                '🎵': { title: 'Music-Led Learning',       description: 'Jolly Songs make phonics memorable and fun' },
+                '🎵': { title: 'Islamic Recitation-Led Learning',       description: 'Jolly Songs make phonics memorable and fun' },
                 '🏆': { title: 'Achievement Badges',       description: 'Digital rewards after every completed unit' },
                 '📱': { title: 'Mobile-Friendly Sessions', description: 'Learn on any device, anywhere' },
                 '🌍': { title: 'Native-Level Instructors', description: 'Qualified TEFL-certified teachers' },
@@ -587,7 +587,7 @@
         // Auto-fill title/description when admin picks a different emoji
         const CB_FEAT_PRESETS = {
             '🧠': { title: 'Neuro-Friendly Design',   description: 'Multi-sensory tasks for all learning styles' },
-            '🎵': { title: 'Music-Led Learning',       description: 'Jolly Songs make phonics memorable and fun' },
+            '🎵': { title: 'Islamic Recitation-Led Learning',       description: 'Jolly Songs make phonics memorable and fun' },
             '🏆': { title: 'Achievement Badges',       description: 'Digital rewards after every completed unit' },
             '📱': { title: 'Mobile-Friendly Sessions', description: 'Learn on any device, anywhere' },
             '🌍': { title: 'Native-Level Instructors', description: 'Qualified TEFL-certified teachers' },

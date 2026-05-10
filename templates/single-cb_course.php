@@ -55,16 +55,16 @@ $_has_custom_features = is_array( $_decoded_features ) && count( $_decoded_featu
 /**
  * Normalize garbled icon strings caused by wp_magic_quotes stripping \u backslashes.
  * e.g. "ud83euddE0" → "🧠"
+ * Note: keys are lowercase since we use strtolower() when looking up
  */
 $_icon_fix_map = [
-	'ud83euddE0' => '🧠', 'ud83euddE1' => '🧡',
-	'ud83cudfb5' => '🎵',
-	'ud83cudfc6' => '🏆',
-	'ud83ddcf1'  => '📱', 'ud83ddCf1'  => '📱',
-	'ud83cudf0d' => '🌍',
-	'ud83ddcca'  => '📊', 'ud83ddCca'  => '📊',
-	// also cover uppercase variants
-	'ud83eudde0' => '🧠',
+	'ud83eudde0' => '🧠', // Brain
+	'ud83eudde1' => '🧡', // Orange heart
+	'ud83cudfb5' => '🎵', // Music
+	'ud83cudfc6' => '🏆', // Trophy
+	'ud83dudcf1' => '📱', // Mobile
+	'ud83cudf0d' => '🌍', // Globe
+	'ud83ddcca' => '📊', // Chart
 ];
 
 if ( $_has_custom_features ) {
@@ -81,7 +81,7 @@ if ( $_has_custom_features ) {
 	// Default fallback features
 	$unique_features = [
 		[ 'icon' => '🧠', 'title' => 'Neuro-Friendly Design',   'description' => 'Multi-sensory tasks for all learning styles' ],
-		[ 'icon' => '🎵', 'title' => 'Music-Led Learning',       'description' => 'Jolly Songs make phonics memorable and fun' ],
+		[ 'icon' => '🎵', 'title' => 'Islamic Recitation-Led Learning',       'description' => 'Jolly Songs make phonics memorable and fun' ],
 		[ 'icon' => '🏆', 'title' => 'Achievement Badges',       'description' => 'Digital rewards after every completed unit' ],
 		[ 'icon' => '📱', 'title' => 'Mobile-Friendly Sessions', 'description' => 'Learn on any device, anywhere' ],
 		[ 'icon' => '🌍', 'title' => 'Native-Level Instructors', 'description' => 'Qualified TEFL-certified teachers' ],
