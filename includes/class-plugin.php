@@ -112,19 +112,28 @@ final class Plugin {
     }
 
     /**
-     * Filter out inactive courses from frontend main queries.
+     * Filter out inactive courses from ALL frontend queries (main + custom WP_Query).
      */
     public function filter_inactive_courses( \WP_Query $query ): void {
-        // Only target frontend main queries for courses or categories.
-        if ( is_admin() || ! $query->is_main_query() ) return;
+        // Only target frontend queries for courses.
+        if ( is_admin() ) return;
 
-        $is_course_query = $query->is_post_type_archive( 'cb_course' ) || 
-                           $query->is_tax( 'cb_category' ) || 
-                           ( $query->get( 'post_type' ) === 'cb_course' );
+        $post_type = $query->get( 'post_type' );
+
+        // Handle single post_type, array of post_types, or empty (will check main query types)
+        $is_course_query = false;
+        if ( ! empty( $post_type ) ) {
+            $post_types = is_array( $post_type ) ? $post_type : [ $post_type ];
+            $is_course_query = in_array( 'cb_course', $post_types, true );
+        } elseif ( $query->is_main_query() ) {
+            // For main queries without explicit post_type, check archive/tax
+            $is_course_query = $query->is_post_type_archive( 'cb_course' ) ||
+                               $query->is_tax( 'cb_category' );
+        }
 
         if ( $is_course_query ) {
             $meta_query = $query->get( 'meta_query' ) ?: [];
-            
+
             // Show if meta is '1' OR if meta doesn't exist (backward compatibility).
             $meta_query[] = [
                 'relation' => 'OR',
@@ -138,7 +147,7 @@ final class Plugin {
                     'compare' => 'NOT EXISTS',
                 ],
             ];
-            
+
             $query->set( 'meta_query', $meta_query );
         }
     }
